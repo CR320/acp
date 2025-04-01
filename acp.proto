@@ -1,0 +1,45 @@
+// python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. acp.proto
+
+syntax = "proto3";
+
+package acp;
+
+// 多模态消息
+message MultiModalMessage {
+  string sender_id = 1;
+  string receiver_id = 2;
+  oneof content {
+    string text = 3;
+    bytes image = 4;
+    bytes audio = 5;
+  }
+}
+
+// 路由注册消息
+message RegisterResponse {
+  bool success = 1;
+  repeated RouteInfo peers = 2;
+}
+
+// 网关路由消息
+message RouteInfo {
+  string agent_id = 1;
+  string address = 2;
+}
+
+// Agent服务定义
+service AgentService {
+  // 双向流式通信接口
+  rpc StreamCommunicate(stream MultiModalMessage)
+      returns (stream MultiModalMessage) {}
+}
+
+// 网关服务定义
+service GatewayService {
+  // Agent注册接口
+  rpc RegisterAgent(RouteInfo) returns (RegisterResponse) {}
+
+  // 消息路由接口（双向流）
+  rpc RouteMessage(stream MultiModalMessage)
+      returns (stream MultiModalMessage) {}
+}
